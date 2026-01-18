@@ -36,4 +36,8 @@ public interface PreteRepository extends JpaRepository<Prete, Integer> {
     // For the lecteur's loan history
     @Query("SELECT p FROM Prete p WHERE p.idLecteur = :idLecteur AND p.demande = false ORDER BY p.datePret DESC")
     List<Prete> findUserLoanHistory(@Param("idLecteur") String idLecteur);
+
+    // Get user's loan requests (demandes)
+    @Query("SELECT p FROM Prete p WHERE p.idLecteur = :idLecteur AND p.demande = true ORDER BY p.datePret DESC")
+    List<Prete> findUserDemandes(@Param("idLecteur") String idLecteur);
 }
