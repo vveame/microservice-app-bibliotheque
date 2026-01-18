@@ -25,4 +25,6 @@ public interface PreteService {
 
     // New method for ML recommendations
     List<ResponsePreteDTO> getPretesOnly();  // Get only active actual loans
+    // History method
+    List<ResponsePreteDTO> getUserLoanHistory(String idLecteur);
 }
