@@ -32,4 +32,8 @@ public interface PreteRepository extends JpaRepository<Prete, Integer> {
     // For getPretesOnly: Get all ACTUAL loans (not requests, not returned)
     @Query("SELECT p FROM Prete p WHERE p.demande = false")
     List<Prete> findAllActiveActualPretes();
+
+    // For the lecteur's loan history
+    @Query("SELECT p FROM Prete p WHERE p.idLecteur = :idLecteur AND p.demande = false ORDER BY p.datePret DESC")
+    List<Prete> findUserLoanHistory(@Param("idLecteur") String idLecteur);
 }
