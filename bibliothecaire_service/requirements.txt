@@ -1,0 +1,8 @@
+Flask
+python-dotenv
+PyJWT
+cryptography
+requests
+flask-pymongo
+flask-restx
+bcrypt

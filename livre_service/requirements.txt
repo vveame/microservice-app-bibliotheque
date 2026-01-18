@@ -1,0 +1,17 @@
+express
+sequelize
+pg
+pg-hstore
+multer
+swagger-jsdoc
+swagger-ui-express
+cors
+dotenv
+nodemon
+
+jsonwebtoken
+jwks-rsa
+express-jwt
+
+axios
+os

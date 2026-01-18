@@ -1,0 +1,112 @@
+package security_service.web;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.server.ResponseStatusException;
+import security_service.dto.*;
+import security_service.service.DetailsService;
+import org.springframework.security.authentication.*;
+import org.springframework.security.core.*;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.stream.Collectors;
+
+@RestController
+public class AuthApi {
+
+    private final AuthenticationManager authenticationManager;
+    private final JwtEncoder jwtEncoder;
+    private final JwtDecoder jwtDecoder;
+    private final DetailsService detailsService;
+
+    public AuthApi(AuthenticationManager authenticationManager,
+                          JwtEncoder jwtEncoder,
+                          JwtDecoder jwtDecoder,
+                          DetailsService detailsService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtEncoder = jwtEncoder;
+        this.jwtDecoder = jwtDecoder;
+        this.detailsService = detailsService;
+    }
+
+    @PostMapping("/login")
+    public TokenResponse login(@RequestBody LoginRequest request) {
+
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                request.email() + ":" + request.role(),
+                                request.password()
+                        )
+                );
+
+        Instant now = Instant.now();
+        String scope = authentication.getAuthorities()
+                .stream().map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(" "));
+
+        JwtClaimsSet accessClaims = JwtClaimsSet.builder()
+                .subject(authentication.getName())
+                .issuer("security-service")
+                .issuedAt(now)
+                .expiresAt(now.plus(10, ChronoUnit.MINUTES))
+                .claim("scope", scope)
+                .build();
+
+        JwtClaimsSet refreshClaims = JwtClaimsSet.builder()
+                .subject(authentication.getName())
+                .issuer("security-service")
+                .issuedAt(now)
+                .expiresAt(now.plus(30, ChronoUnit.MINUTES))
+                .build();
+
+        return new TokenResponse(
+                jwtEncoder.encode(JwtEncoderParameters.from(accessClaims)).getTokenValue(),
+                jwtEncoder.encode(JwtEncoderParameters.from(refreshClaims)).getTokenValue()
+        );
+    }
+
+    @PostMapping("/refresh")
+    public TokenResponse refresh(@RequestParam String refresh_token,
+                                 @RequestParam String role) {
+        try{
+            Jwt decoded = jwtDecoder.decode(refresh_token);
+            String email = decoded.getSubject();
+
+            UserDetails user =
+                    detailsService.loadUserByUsername(email + ":" + role);
+
+            Instant now = Instant.now();
+            String scope = user.getAuthorities()
+                    .stream().map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.joining(" "));
+
+            JwtClaimsSet accessClaims = JwtClaimsSet.builder()
+                    .subject(user.getUsername())
+                    .issuer("security-service")
+                    .issuedAt(now)
+                    .expiresAt(now.plus(10, ChronoUnit.MINUTES))
+                    .claim("scope", scope)
+                    .build();
+
+            return new TokenResponse(
+                    jwtEncoder.encode(JwtEncoderParameters.from(accessClaims)).getTokenValue(),
+                    refresh_token
+            );
+        }
+        catch (JwtValidationException e) {
+            // Check if it's an expiration error
+            if (e.getMessage().contains("expired")) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                        "Refresh token has expired. Please login again.", e);
+            } else {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                        "Invalid refresh token: " + e.getMessage(), e);
+            }
+        }
+
+    }
+}

@@ -1,0 +1,9 @@
+# Ignore the following files from being pushed remotely
+
+**/privateKey.pem
+
+**/.env
+
+**/.env/
+
+**/node_modules/
