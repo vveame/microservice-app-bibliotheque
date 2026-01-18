@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-service
+  template:
+    metadata:
+      labels:
+        app: admin-service
+    spec:
+      containers:
+        - name: admin-service
+          image: admin-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+          env:
+            - name: APP_NAME
+              value: ADMIN-SERVICE
+
+            - name: APP_PORT
+              value: "8084"
+
+            - name: MONGO_URI
+              value: mongodb://mongo-db:27017/admin_db
+
+            - name: EUREKA_SERVER
+              value: http://discovery-service:8761/eureka
+
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-secret
+                  key: INTERNAL_API_KEY
+
+            - name: DEFAULT_ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: admin-default-secret
+                  key: DEFAULT_ADMIN_EMAIL
+
+            - name: DEFAULT_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: admin-default-secret
+                  key: DEFAULT_ADMIN_PASSWORD
+
+            - name: FORCE_PASSWORD_CHANGE
+              value: "true"
+
+            - name: RSA_PUBLIC_KEY_PATH
+              value: keys/publicKey.pem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-service
+spec:
+  type: ClusterIP
+  selector:
+    app: admin-service
+  ports:
+    - port: 8084
+      targetPort: 8084

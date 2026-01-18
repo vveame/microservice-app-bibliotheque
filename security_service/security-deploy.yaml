@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: security-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: security-service
+  template:
+    metadata:
+      labels:
+        app: security-service
+    spec:
+      containers:
+        - name: security-service
+          image: security-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9090
+          env:
+            - name: SPRING_APPLICATION_NAME
+              value: SECURITY-SERVICE
+
+            - name: SERVER_PORT
+              value: "9090"
+
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-secret
+                  key: INTERNAL_API_KEY
+
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: http://discovery-service:8761/eureka
+
+            - name: LECTEUR_SERVICE_URL
+              value: http://lecteur-service:8083
+
+            - name: ADMIN_SERVICE_URL
+              value: http://admin-service:8084
+
+            - name: BIBLIOTHECAIRE_SERVICE_URL
+              value: http://bibliothecaire-service:8082
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: security-service
+spec:
+  type: ClusterIP
+  selector:
+    app: security-service
+  ports:
+    - port: 9090
+      targetPort: 9090

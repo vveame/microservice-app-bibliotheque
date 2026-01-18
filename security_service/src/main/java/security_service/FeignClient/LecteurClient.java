@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.Map;
 
-@FeignClient(name = "Lecteur-Service-PY", url = "${lecteur.service.url}")
+@FeignClient(name = "LECTEUR-SERVICE", url = "${lecteur.service.url}")
 public interface LecteurClient {
 
     @GetMapping("/internal/email/{email}")

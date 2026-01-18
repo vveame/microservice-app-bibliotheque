@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lecteur-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lecteur-service
+  template:
+    metadata:
+      labels:
+        app: lecteur-service
+    spec:
+      containers:
+        - name: lecteur-service
+          image: lecteur-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          env:
+            - name: APP_NAME
+              value: LECTEUR-SERVICE
+
+            - name: APP_PORT
+              value: "8083"
+
+            - name: MONGO_URI
+              value: mongodb://mongo-db:27017/lecteur_db
+
+            - name: EUREKA_SERVER
+              value: http://discovery-service:8761/eureka
+
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-secret
+                  key: INTERNAL_API_KEY
+
+            - name: RSA_PUBLIC_KEY_PATH
+              value: keys/publicKey.pem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lecteur-service
+spec:
+  type: ClusterIP
+  selector:
+    app: lecteur-service
+  ports:
+    - port: 8083
+      targetPort: 8083

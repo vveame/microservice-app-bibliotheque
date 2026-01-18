@@ -9,7 +9,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "lecteur-service", url = "http://localhost:8083")
+@FeignClient(name = "LECTEUR-SERVICE", url = "${lecteur.service.url}")
 public interface LecteurClient {
     @GetMapping("/v1/lecteurs/{id}")  // Changed endpoint
     @CircuitBreaker(name = "lecteurCB", fallbackMethod = "fallbackGetLecteur")

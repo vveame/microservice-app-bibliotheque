@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: livre-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: livre-service
+  template:
+    metadata:
+      labels:
+        app: livre-service
+    spec:
+      containers:
+        - name: livre-service
+          image: livre-service:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DB_HOST
+              value: postgres-db       # Use your PostgreSQL service name here
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: biblio_livre
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+            - name: APP_NAME
+              value: LIVRE-SERVICE
+            - name: EUREKA_SERVER
+              value: http://discovery-service:8761/eureka
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: livre-service
+spec:
+  selector:
+    app: livre-service
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bibliothecaire-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bibliothecaire-service
+  template:
+    metadata:
+      labels:
+        app: bibliothecaire-service
+    spec:
+      containers:
+        - name: bibliothecaire-service
+          image: bibliothecaire-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+          env:
+            - name: APP_NAME
+              value: BIBLIOTHECAIRE-SERVICE
+
+            - name: APP_PORT
+              value: "8082"
+
+            - name: MONGO_URI
+              value: mongodb://mongo-db:27017/bibliothecaire_db
+
+            - name: EUREKA_SERVER
+              value: http://discovery-service:8761/eureka
+
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-secret
+                  key: INTERNAL_API_KEY
+
+            - name: RSA_PUBLIC_KEY_PATH
+              value: keys/publicKey.pem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bibliothecaire-service
+spec:
+  type: ClusterIP
+  selector:
+    app: bibliothecaire-service
+  ports:
+    - port: 8082
+      targetPort: 8082

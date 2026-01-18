@@ -5,19 +5,12 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./src/config/swagger");
 const initDatabase = require("./src/config/initDatabase");
 require("dotenv").config();
-const cors = require("cors");
 const { startEurekaClient } = require("./eureka_client");
 
 const app = express();
 
 // Middlewares
 app.use(express.json());
-
-app.use(cors({
-  origin: "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
 
 //Eureka health check
 app.get("/health", (req, res) => {

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.Map;
 
-@FeignClient(name = "Admin-Service-PY", url = "${admin.service.url}")
+@FeignClient(name = "ADMIN-SERVICE", url = "${admin.service.url}")
 public interface AdminClient {
 
     @GetMapping("/internal/email/{email}")

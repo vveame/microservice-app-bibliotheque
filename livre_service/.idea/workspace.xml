@@ -221,6 +221,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="KubernetesApiPersistence"><![CDATA[{}]]></component>
+  <component name="KubernetesApiProvider"><![CDATA[{
+  "isMigrated": true
+}]]></component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
   </component>
@@ -289,6 +293,8 @@
       <workItem from="1768136791969" duration="3353000" />
       <workItem from="1768219828309" duration="2625000" />
       <workItem from="1768222743189" duration="798000" />
+      <workItem from="1768309882231" duration="638000" />
+      <workItem from="1768747366179" duration="1092000" />
     </task>
     <servers />
   </component>

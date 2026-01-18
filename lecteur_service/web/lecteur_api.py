@@ -93,3 +93,19 @@ class Lecteur(Resource):
     def delete(self, id):
         """Supprimer un lecteur"""
         return service.delete_lecteur(id)
+
+@api.route('/register')
+class LecteurRegister(Resource):
+    @api.expect(lecteur_model)
+    @api.marshal_with(lecteur_response_model, code=201)
+    def post(self):
+        """Inscription publique d’un lecteur"""
+        data = request.json
+        dto = RequestLecteurDTO(
+            nom=data.get('nom'),
+            prenom=data.get('prenom'),
+            date_naissance=data.get('date_naissance'),
+            email=data.get('email'),
+            password=data.get('password')
+        )
+        return service.add_lecteur(dto)
