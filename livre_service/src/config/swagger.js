@@ -12,7 +12,7 @@ const options = {
 
     servers: [
       {
-        url: "http://localhost:8091"
+        url: "http://localhost:8080"
       }
     ],
     components: {
@@ -28,7 +28,7 @@ const options = {
             numChapters: { type: "integer", example: 17 },
             numPages: { type: "integer", example: 464 },
             numTotalLivres: { type: "integer", example: 5 },
-            image: { type: "string", example: "https://example.com/cover.jpg" }, 
+            image: { type: "string", format: "byte", example: "iVBORw0KGgoAAAANSUhEUgAA..." }, 
             synopsis: { type: "string", example: "Résumé du livre..." } 
           }
         },
