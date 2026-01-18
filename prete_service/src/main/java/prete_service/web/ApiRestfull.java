@@ -258,4 +258,15 @@ public class ApiRestfull {
         List<ResponsePreteDTO> responsePreteDTOS = preteService.getPretesOnly();
         return ResponseEntity.ok(responsePreteDTOS);
     }
+
+    @Operation(
+            summary = "Historique des prêts d'un utilisateur",
+            description = "Retourne tous les prêts réels (demande = false) d'un utilisateur spécifique, triés du plus récent au plus ancien."
+    )
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_LECTEUR')")
+    @GetMapping("/lecteurs/{idLecteur}/historique")
+    public ResponseEntity<List<ResponsePreteDTO>> getUserLoanHistory(@PathVariable String idLecteur) {
+        List<ResponsePreteDTO> history = preteService.getUserLoanHistory(idLecteur);
+        return ResponseEntity.ok(history);
+    }
 }
