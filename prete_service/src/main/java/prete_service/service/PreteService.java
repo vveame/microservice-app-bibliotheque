@@ -27,4 +27,8 @@ public interface PreteService {
     List<ResponsePreteDTO> getPretesOnly();  // Get only active actual loans
     // History method
     List<ResponsePreteDTO> getUserLoanHistory(String idLecteur);
+    // User's demand history
+    List<ResponsePreteDTO> getUserDemandes(String idLecteur);
+    // User cancels their own loan request
+    void cancelUserDemande(String idLecteur, Integer idPret);
 }
