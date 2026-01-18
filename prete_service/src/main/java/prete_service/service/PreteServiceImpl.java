@@ -332,6 +332,13 @@ public class PreteServiceImpl implements PreteService {
         return convertPretesToDTOList(activePretes);
     }
 
+    @Override
+    public List<ResponsePreteDTO> getUserLoanHistory(String idLecteur) {
+        // Simple - just get the loans and convert using your existing helper
+        List<Prete> userPretes = preteRepository.findUserLoanHistory(idLecteur);
+        return convertPretesToDTOList(userPretes);
+    }
+
     // ============ HELPER METHOD ============
 
     private List<ResponsePreteDTO> convertPretesToDTOList(List<Prete> pretes) {
