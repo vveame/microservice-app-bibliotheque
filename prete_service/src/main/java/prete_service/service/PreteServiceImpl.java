@@ -339,6 +339,34 @@ public class PreteServiceImpl implements PreteService {
         return convertPretesToDTOList(userPretes);
     }
 
+    @Override
+    public List<ResponsePreteDTO> getUserDemandes(String idLecteur) {
+        // Get user's loan requests
+        List<Prete> userDemandes = preteRepository.findUserDemandes(idLecteur);
+        return convertPretesToDTOList(userDemandes);
+    }
+
+    @Override
+    @Transactional
+    public void cancelUserDemande(String idLecteur, Integer idPret) {
+        // Find the demande
+        Prete prete = preteRepository.findById(idPret)
+                .orElseThrow(() -> new ResourceNotFoundException("Demande de prêt non trouvée avec ID: " + idPret));
+
+        // Verify it's actually a demande
+        if (prete.getDemande() == null || !prete.getDemande()) {
+            throw new InvalidOperationException("Ceci n'est pas une demande de prêt.");
+        }
+
+        // Verify the demande belongs to the user
+        if (!prete.getIdLecteur().equals(idLecteur)) {
+            throw new InvalidOperationException("Vous ne pouvez annuler que vos propres demandes.");
+        }
+
+        // Delete the demande
+        preteRepository.delete(prete);
+    }
+
     // ============ HELPER METHOD ============
 
     private List<ResponsePreteDTO> convertPretesToDTOList(List<Prete> pretes) {
