@@ -269,4 +269,26 @@ public class ApiRestfull {
         List<ResponsePreteDTO> history = preteService.getUserLoanHistory(idLecteur);
         return ResponseEntity.ok(history);
     }
+
+    @Operation(
+            summary = "Historique des demandes de prêt d'un utilisateur",
+            description = "Retourne toutes les demandes de prêt (demande = true) faites par un utilisateur spécifique."
+    )
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_LECTEUR')")
+    @GetMapping("/lecteurs/{idLecteur}/historiquedemandes")
+    public ResponseEntity<List<ResponsePreteDTO>> getUserDemandes(@PathVariable String idLecteur) {
+        List<ResponsePreteDTO> demandes = preteService.getUserDemandes(idLecteur);
+        return ResponseEntity.ok(demandes);
+    }
+
+    @Operation(
+            summary = "Annuler sa propre demande de prêt",
+            description = "Permet à un utilisateur d'annuler sa propre demande de prêt."
+    )
+    @PreAuthorize("hasAuthority('SCOPE_ROLE_LECTEUR')")
+    @DeleteMapping("/lecteurs/{idLecteur}/demandes/{idPret}")
+    public ResponseEntity<Void> cancelUserDemande(@PathVariable String idLecteur, @PathVariable Integer idPret) {
+        preteService.cancelUserDemande(idLecteur, idPret);
+        return ResponseEntity.ok().build();
+    }
 }
