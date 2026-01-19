@@ -222,15 +222,18 @@ public class PreteServiceImpl implements PreteService {
 
     @Override
     @Transactional
-    public ResponsePreteDTO demandePrete(RequestPreteDTO requestPreteDTO) {
+    public ResponsePreteDTO demandePrete(String idLecteur, RequestPreteDTO requestPreteDTO) {
+
+        requestPreteDTO.setIdLecteur(idLecteur);
+
         // Validate user exists
         try {
-            Lecteur lecteur = lecteurClient.getLecteurById(requestPreteDTO.getIdLecteur());
+            Lecteur lecteur = lecteurClient.getLecteurById(idLecteur);
             if (lecteur == null) {
                 throw new ResourceNotFoundException("Lecteur Introuvable !");
             }
         } catch (Exception e) {
-            throw new ExternalServiceException("Lecteur avec l'ID: " + requestPreteDTO.getIdLecteur(), e);
+            throw new ExternalServiceException("Lecteur avec l'ID: " + idLecteur, e);
         }
 
         // Validate book exists

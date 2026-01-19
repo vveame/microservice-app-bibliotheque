@@ -18,7 +18,7 @@ public interface PreteService {
     List<ResponsePreteDTO> anciennePrete();  // List returned loans
     List<ResponsePreteDTO> preteActif();  // List active loans (not returned, not expired)
     List<ResponsePreteDTO> retardPrete();  // List overdue loans
-    ResponsePreteDTO demandePrete(RequestPreteDTO requestPreteDTO);  // Create loan request
+    ResponsePreteDTO demandePrete(String idLecteur, RequestPreteDTO requestPreteDTO);  // Create loan request
     void rejeterPrete(Integer idPret);  // Reject loan request
     ResponsePreteDTO accepterPrete(Integer idPret);  // Accept loan request
     List<ResponsePreteDTO> getAllDemandes(); // // List all loan requests

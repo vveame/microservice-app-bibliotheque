@@ -208,9 +208,9 @@ public class ApiRestfull {
             description = "Crée une demande de prêt (demande = true)."
     )
     @PreAuthorize("hasAuthority('SCOPE_ROLE_LECTEUR')")
-    @PostMapping("/demandes")
-    public ResponseEntity<ResponsePreteDTO> demandePrete(@RequestBody RequestPreteDTO requestPreteDTO) {
-        ResponsePreteDTO responsePreteDTO = preteService.demandePrete(requestPreteDTO);
+    @PostMapping("/lecteurs/{idLecteur}/demandes")
+    public ResponseEntity<ResponsePreteDTO> createUserDemandePrete(@PathVariable String idLecteur, @RequestBody RequestPreteDTO requestPreteDTO) {
+        ResponsePreteDTO responsePreteDTO = preteService.demandePrete(idLecteur, requestPreteDTO);
         return ResponseEntity.ok(responsePreteDTO);
     }
 
