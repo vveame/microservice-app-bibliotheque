@@ -6,11 +6,13 @@ const swaggerSpec = require("./src/config/swagger");
 const initDatabase = require("./src/config/initDatabase");
 require("dotenv").config();
 const { startEurekaClient } = require("./eureka_client");
+const { metricsMiddleware, metricsEndpoint } = require('./prometheus_metrics');
 
 const app = express();
 
 // Middlewares
 app.use(express.json());
+app.use(metricsMiddleware);
 
 //Eureka health check
 app.get("/health", (req, res) => {
@@ -20,6 +22,7 @@ app.get("/health", (req, res) => {
 // Routes
 app.use("/swagger", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/v1/livres", livreRoutes);
+app.get('/metrics', metricsEndpoint);
 
 // 404
 app.use((req, res) => {

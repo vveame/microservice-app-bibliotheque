@@ -15,6 +15,7 @@ spec:
       containers:
         - name: gateway-service
           image: gateway-service:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8888
           env:

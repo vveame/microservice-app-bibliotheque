@@ -15,7 +15,7 @@ spec:
       containers:
         - name: admin-service
           image: admin-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8084
           env:

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          env:
+            # ===== Compte admin Grafana =====
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin"
+
+            # ===== Configuration SMTP Gmail =====
+            - name: GF_SMTP_ENABLED # active l’envoi d’emails
+              value: "true"
+            - name: GF_SMTP_HOST # serveur SMTP Gmail (TLS)
+              value: "smtp.gmail.com:587"
+            - name: GF_SMTP_USER # adresse Gmail
+              value: "feddwiam@gmail.com"
+            - name: GF_SMTP_PASSWORD #mot de passe d’application Gmail
+              value: "qomf anfy wyxf caf"
+            - name: GF_SMTP_FROM_NAME # nom affiché dans l’email
+              value: "Grafana Alerting"
+            - name: GF_SMTP_SKIP_VERIFY
+              value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  selector:
+    app: grafana
+  ports:
+    - protocol: TCP
+      port: 5051
+      targetPort: 3000
+      nodePort: 30051

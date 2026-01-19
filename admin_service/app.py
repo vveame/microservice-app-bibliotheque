@@ -7,10 +7,14 @@ from extensions import mongo
 from flask_restx import Api
 from service.admin_initializer import AdminInitializer
 from global_error_handler import register_error_handlers
+from prometheus_metrics import setup_metrics
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Setup Prometheus monitoring
+    setup_metrics(app)
 
     # Initialize PyMongo
     mongo.init_app(app)
@@ -41,7 +45,6 @@ def create_app():
     register_error_handlers(api)
 
     return app
-
 
 if __name__ == "__main__":
     from eureka_client import start_eureka_client

@@ -15,7 +15,7 @@ spec:
       containers:
         - name: bibliothecaire-service
           image: bibliothecaire-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8082
           env:

@@ -15,7 +15,7 @@ spec:
       containers:
         - name: lecteur-service
           image: lecteur-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8083
           env:

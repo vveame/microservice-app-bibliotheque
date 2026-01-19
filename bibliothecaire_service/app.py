@@ -6,10 +6,13 @@ from config import Config
 from extensions import mongo
 from flask_restx import Api
 from global_error_handler import register_error_handlers
+from prometheus_metrics import setup_metrics
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    setup_metrics(app)
 
     # Initialize PyMongo
     mongo.init_app(app)
