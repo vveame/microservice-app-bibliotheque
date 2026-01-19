@@ -16,7 +16,7 @@ public class ResponsePreteDTO {
     private Boolean livreRetourne;
     private Boolean demande;
     private String idLecteur;
-    private Integer idLivre;
+    private Integer userId;
     private Livre livre;
     private Lecteur lecteur;
 }

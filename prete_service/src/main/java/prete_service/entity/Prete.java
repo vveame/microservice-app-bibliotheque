@@ -23,7 +23,7 @@ public class Prete {
     private Date dateFinPret;
     private Boolean livreRetourne;
     private Boolean demande;
-    private String idLecteur;
+    private String userId;
     private Integer idLivre;
 
     @Transient //l'attribue n'est pas représenter dans la DB ----> n'est persistant.

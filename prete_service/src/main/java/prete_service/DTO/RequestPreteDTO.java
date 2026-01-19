@@ -14,6 +14,6 @@ public class RequestPreteDTO {
     private Date dateFinPret;
     private Boolean livreRetourne;
     private Boolean demande;
-    private String idLecteur;
+    private String userId;
     private Integer idLivre;
 }

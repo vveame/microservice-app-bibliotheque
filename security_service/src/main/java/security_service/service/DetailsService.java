@@ -42,7 +42,10 @@ public class DetailsService implements UserDetailsService {
             default -> throw new UsernameNotFoundException("Invalid role");
         };
 
-        return new User(
+        String userId = (String) user.get("userId");
+
+        return new CustomUserDetails(
+                userId,
                 (String) user.get("email"),
                 (String) user.get("password"),
                 List.of(new SimpleGrantedAuthority("ROLE_" + role))

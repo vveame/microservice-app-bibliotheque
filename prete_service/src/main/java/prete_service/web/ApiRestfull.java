@@ -15,6 +15,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.util.Date;
 import java.util.List;
@@ -207,11 +208,19 @@ public class ApiRestfull {
             summary = "Créer une demande de prêt",
             description = "Crée une demande de prêt (demande = true)."
     )
+    @PostMapping("/demandes")
     @PreAuthorize("hasAuthority('SCOPE_ROLE_LECTEUR')")
-    @PostMapping("/lecteurs/{idLecteur}/demandes")
-    public ResponseEntity<ResponsePreteDTO> createUserDemandePrete(@PathVariable String idLecteur, @RequestBody RequestPreteDTO requestPreteDTO) {
-        ResponsePreteDTO responsePreteDTO = preteService.demandePrete(idLecteur, requestPreteDTO);
-        return ResponseEntity.ok(responsePreteDTO);
+    public ResponseEntity<ResponsePreteDTO> demandePrete(
+            @RequestBody RequestPreteDTO requestPreteDTO,
+            JwtAuthenticationToken authentication) {
+
+        String authenticatedUserId =
+                authentication.getToken().getClaim("userId");
+
+        ResponsePreteDTO response =
+                preteService.demandePrete(requestPreteDTO, authenticatedUserId);
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(
@@ -263,10 +272,17 @@ public class ApiRestfull {
             summary = "Historique des prêts d'un utilisateur",
             description = "Retourne tous les prêts réels (demande = false) d'un utilisateur spécifique, triés du plus récent au plus ancien."
     )
+    @GetMapping("/lecteurs/historique")
     @PreAuthorize("hasAuthority('SCOPE_ROLE_LECTEUR')")
-    @GetMapping("/lecteurs/{idLecteur}/historique")
-    public ResponseEntity<List<ResponsePreteDTO>> getUserLoanHistory(@PathVariable String idLecteur) {
-        List<ResponsePreteDTO> history = preteService.getUserLoanHistory(idLecteur);
+    public ResponseEntity<List<ResponsePreteDTO>> getUserLoanHistory(
+            JwtAuthenticationToken authentication) {
+
+        String authenticatedUserId =
+                authentication.getToken().getClaim("userId");
+
+        List<ResponsePreteDTO> history =
+                preteService.getUserLoanHistory(authenticatedUserId, authenticatedUserId);
+
         return ResponseEntity.ok(history);
     }
 
@@ -274,10 +290,17 @@ public class ApiRestfull {
             summary = "Historique des demandes de prêt d'un utilisateur",
             description = "Retourne toutes les demandes de prêt (demande = true) faites par un utilisateur spécifique."
     )
+    @GetMapping("/lecteurs/demandes")
     @PreAuthorize("hasAuthority('SCOPE_ROLE_LECTEUR')")
-    @GetMapping("/lecteurs/{idLecteur}/historiquedemandes")
-    public ResponseEntity<List<ResponsePreteDTO>> getUserDemandes(@PathVariable String idLecteur) {
-        List<ResponsePreteDTO> demandes = preteService.getUserDemandes(idLecteur);
+    public ResponseEntity<List<ResponsePreteDTO>> getUserDemandes(
+            JwtAuthenticationToken authentication) {
+
+        String authenticatedUserId =
+                authentication.getToken().getClaim("userId");
+
+        List<ResponsePreteDTO> demandes =
+                preteService.getUserDemandes(authenticatedUserId, authenticatedUserId);
+
         return ResponseEntity.ok(demandes);
     }
 
@@ -285,10 +308,21 @@ public class ApiRestfull {
             summary = "Annuler sa propre demande de prêt",
             description = "Permet à un utilisateur d'annuler sa propre demande de prêt."
     )
+    @DeleteMapping("/lecteurs/demandes/{idPret}")
     @PreAuthorize("hasAuthority('SCOPE_ROLE_LECTEUR')")
-    @DeleteMapping("/lecteurs/{idLecteur}/demandes/{idPret}")
-    public ResponseEntity<Void> cancelUserDemande(@PathVariable String idLecteur, @PathVariable Integer idPret) {
-        preteService.cancelUserDemande(idLecteur, idPret);
+    public ResponseEntity<Void> cancelUserDemande(
+            @PathVariable Integer idPret,
+            JwtAuthenticationToken authentication) {
+
+        String authenticatedUserId =
+                authentication.getToken().getClaim("userId");
+
+        preteService.cancelUserDemande(
+                authenticatedUserId,
+                idPret,
+                authenticatedUserId
+        );
+
         return ResponseEntity.ok().build();
     }
 }

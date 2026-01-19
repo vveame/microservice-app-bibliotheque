@@ -7,8 +7,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Lecteur {
-    @JsonProperty("id_lecteur")
-    private String idLecteur;
+    @JsonProperty("userId")
+    private String userId;
 
     private String nom;
     private String prenom;

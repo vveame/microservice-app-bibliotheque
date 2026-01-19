@@ -18,7 +18,7 @@ public interface PreteService {
     List<ResponsePreteDTO> anciennePrete();  // List returned loans
     List<ResponsePreteDTO> preteActif();  // List active loans (not returned, not expired)
     List<ResponsePreteDTO> retardPrete();  // List overdue loans
-    ResponsePreteDTO demandePrete(String idLecteur, RequestPreteDTO requestPreteDTO);  // Create loan request
+    ResponsePreteDTO demandePrete(RequestPreteDTO requestPreteDTO, String authenticatedUserId);  // Create loan request
     void rejeterPrete(Integer idPret);  // Reject loan request
     ResponsePreteDTO accepterPrete(Integer idPret);  // Accept loan request
     List<ResponsePreteDTO> getAllDemandes(); // // List all loan requests
@@ -26,9 +26,9 @@ public interface PreteService {
     // New method for ML recommendations
     List<ResponsePreteDTO> getPretesOnly();  // Get only active actual loans
     // History method
-    List<ResponsePreteDTO> getUserLoanHistory(String idLecteur);
+    List<ResponsePreteDTO> getUserLoanHistory(String userId, String authenticatedUserId);
     // User's demand history
-    List<ResponsePreteDTO> getUserDemandes(String idLecteur);
+    List<ResponsePreteDTO> getUserDemandes(String userId, String authenticatedUserId);
     // User cancels their own loan request
-    void cancelUserDemande(String idLecteur, Integer idPret);
+    void cancelUserDemande(String userId, Integer idPret, String authenticatedUserId);
 }

@@ -20,6 +20,7 @@ class LecteurByEmail(Resource):
             abort(404, "Lecteur non trouvé")
 
         return {
+            "userId": result.get("userId") or str(result.get("_id")),
             "email": result["email"],
             "password": result["password"],  # hashed
             "role": "LECTEUR"

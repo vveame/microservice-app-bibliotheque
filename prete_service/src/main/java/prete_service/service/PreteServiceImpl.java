@@ -38,12 +38,12 @@ public class PreteServiceImpl implements PreteService {
     public ResponsePreteDTO addPrete(RequestPreteDTO requestPreteDTO) {
 
         try {
-            Lecteur lecteur = lecteurClient.getLecteurById(requestPreteDTO.getIdLecteur());
+            Lecteur lecteur = lecteurClient.getLecteurById(requestPreteDTO.getUserId());
             if (lecteur == null) {
                 throw new ResourceNotFoundException("Lecteur Introuvable !");
             }
         } catch (Exception e) {
-            throw new ExternalServiceException("Erreur lors de la récupération du lecteur avec l'ID: " + requestPreteDTO.getIdLecteur(), e);
+            throw new ExternalServiceException("Erreur lors de la récupération du lecteur avec l'ID: " + requestPreteDTO.getUserId(), e);
         }
 
         try {
@@ -56,7 +56,7 @@ public class PreteServiceImpl implements PreteService {
         }
 
         //Check if user already has an active loan (livreRetourne = false)
-        List<Prete> activePretes = preteRepository.findByIdLecteurAndLivreRetourneFalse(requestPreteDTO.getIdLecteur());
+        List<Prete> activePretes = preteRepository.findByUserIdAndLivreRetourneFalse(requestPreteDTO.getUserId());
 
         // Only check for ACTUAL loans (demande = false), not loan requests
         // If you want to also prevent loan requests when user has active loan, remove the demande check
@@ -65,7 +65,7 @@ public class PreteServiceImpl implements PreteService {
 
         if (hasActiveLoan) {
             throw new ActiveLoanException(
-                    "Le lecteur avec ID " + requestPreteDTO.getIdLecteur() +
+                    "Le lecteur avec ID " + requestPreteDTO.getUserId() +
                             " a déjà un prêt actif. Veuillez retourner le livre avant d'en emprunter un autre."
             );
         }
@@ -79,7 +79,7 @@ public class PreteServiceImpl implements PreteService {
         }
 
         Prete savedPrete = preteRepository.save(prete);
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getIdLecteur()));
+        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId()));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
         return preteMapper.Prete_To_DTO(savedPrete);
     }
@@ -91,7 +91,7 @@ public class PreteServiceImpl implements PreteService {
 
         for (Prete p : pretes) {
 
-            Lecteur lecteur = lecteurClient.getLecteurById(p.getIdLecteur());
+            Lecteur lecteur = lecteurClient.getLecteurById(p.getUserId());
             p.setLecteur(lecteur);
             Livre livre = livreClient.getLivreById(p.getIdLivre());
             p.setLivre(livre);
@@ -107,7 +107,7 @@ public class PreteServiceImpl implements PreteService {
         Prete prete = preteRepository.findById(id).orElse(null);
         if (prete == null) return null;
 
-        Lecteur lecteur = lecteurClient.getLecteurById(prete.getIdLecteur());
+        Lecteur lecteur = lecteurClient.getLecteurById(prete.getUserId());
         Livre livre = livreClient.getLivreById(prete.getIdLivre());
 
         prete.setLecteur(lecteur);
@@ -133,7 +133,7 @@ public class PreteServiceImpl implements PreteService {
         if (nv_prete.getDateFinPret() != null) {prete.setDateFinPret(nv_prete.getDateFinPret());}
         if (nv_prete.getLivreRetourne() != null) {prete.setLivreRetourne(nv_prete.getLivreRetourne());}
         if (nv_prete.getDemande() != null) {prete.setDemande(nv_prete.getDemande());}
-        if (nv_prete.getIdLecteur() != null) {prete.setIdLecteur(nv_prete.getIdLecteur());}
+        if (nv_prete.getUserId() != null) {prete.setUserId(nv_prete.getUserId());}
         if (nv_prete.getIdLivre() != null) {prete.setIdLivre(nv_prete.getIdLivre());}
 
         Prete saved_prete = preteRepository.save(prete);
@@ -162,7 +162,7 @@ public class PreteServiceImpl implements PreteService {
         Prete savedPrete = preteRepository.save(prete);
 
         // Fetch user and book details for response
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getIdLecteur()));
+        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId()));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
 
         return preteMapper.Prete_To_DTO(savedPrete);
@@ -194,7 +194,7 @@ public class PreteServiceImpl implements PreteService {
         Prete savedPrete = preteRepository.save(prete);
 
         // Fetch user and book details
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getIdLecteur()));
+        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId()));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
 
         return preteMapper.Prete_To_DTO(savedPrete);
@@ -222,47 +222,29 @@ public class PreteServiceImpl implements PreteService {
 
     @Override
     @Transactional
-    public ResponsePreteDTO demandePrete(String idLecteur, RequestPreteDTO requestPreteDTO) {
+    public ResponsePreteDTO demandePrete(RequestPreteDTO requestPreteDTO, String authenticatedUserId) {
+        // Here we enforce userId from JWT token (authenticatedUserId)
+        Lecteur lecteur = lecteurClient.getLecteurById(authenticatedUserId);
+        if (lecteur == null) throw new ResourceNotFoundException("Lecteur Introuvable !");
 
-        requestPreteDTO.setIdLecteur(idLecteur);
+        Livre livre = livreClient.getLivreById(requestPreteDTO.getIdLivre());
+        if (livre == null) throw new ResourceNotFoundException("Livre Introuvable !");
 
-        // Validate user exists
-        try {
-            Lecteur lecteur = lecteurClient.getLecteurById(idLecteur);
-            if (lecteur == null) {
-                throw new ResourceNotFoundException("Lecteur Introuvable !");
-            }
-        } catch (Exception e) {
-            throw new ExternalServiceException("Lecteur avec l'ID: " + idLecteur, e);
-        }
-
-        // Validate book exists
-        try {
-            Livre livre = livreClient.getLivreById(requestPreteDTO.getIdLivre());
-            if (livre == null) {
-                throw new ResourceNotFoundException("Livre Introuvable !");
-            }
-        } catch (Exception e) {
-            throw new ExternalServiceException("Erreur lors de la récupération du livre avec l'ID: " + requestPreteDTO.getIdLivre(), e);
-        }
-
-        // Create loan request
         Prete prete = preteMapper.DTO_to_Prete(requestPreteDTO);
+        prete.setUserId(authenticatedUserId); // Enforce correct user
 
-        // Set specific values for loan request
-        prete.setDemande(true);           // This is a request
-        prete.setLivreRetourne(null);     // Not applicable for requests
-        prete.setDatePret(new Date());    // Request date is now
+        prete.setDemande(true);
+        prete.setLivreRetourne(null);
+        prete.setDatePret(new Date());
 
-        // If dateFinPret is not provided, set a default (e.g., 7 days from now)
         if (prete.getDateFinPret() == null) {
             long sevenDaysInMillis = 7L * 24 * 60 * 60 * 1000;
             prete.setDateFinPret(new Date(System.currentTimeMillis() + sevenDaysInMillis));
         }
 
         Prete savedPrete = preteRepository.save(prete);
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getIdLecteur()));
-        savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
+        savedPrete.setLecteur(lecteur);
+        savedPrete.setLivre(livre);
 
         return preteMapper.Prete_To_DTO(savedPrete);
     }
@@ -293,13 +275,13 @@ public class PreteServiceImpl implements PreteService {
         }
 
         // Check if user already has an active loan
-        List<Prete> activePretes = preteRepository.findByIdLecteurAndLivreRetourneFalse(prete.getIdLecteur());
+        List<Prete> activePretes = preteRepository.findByUserIdAndLivreRetourneFalse(prete.getUserId());
         boolean hasActiveLoan = activePretes.stream()
                 .anyMatch(p -> p.getDemande() == null || !p.getDemande());
 
         if (hasActiveLoan) {
             throw new ActiveLoanException(
-                    "Le lecteur avec ID " + prete.getIdLecteur() +
+                    "Le lecteur avec ID " + prete.getUserId() +
                             " a déjà un prêt actif. Impossible d'accepter cette demande."
             );
         }
@@ -314,7 +296,7 @@ public class PreteServiceImpl implements PreteService {
         }
 
         Prete savedPrete = preteRepository.save(prete);
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getIdLecteur()));
+        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId()));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
 
         return preteMapper.Prete_To_DTO(savedPrete);
@@ -336,37 +318,44 @@ public class PreteServiceImpl implements PreteService {
     }
 
     @Override
-    public List<ResponsePreteDTO> getUserLoanHistory(String idLecteur) {
-        // Simple - just get the loans and convert using your existing helper
-        List<Prete> userPretes = preteRepository.findUserLoanHistory(idLecteur);
+    public List<ResponsePreteDTO> getUserLoanHistory(String userId, String authenticatedUserId) {
+        // Enforce ownership
+        if (!userId.equals(authenticatedUserId)) {
+            throw new InvalidOperationException("Vous ne pouvez voir que votre propre historique.");
+        }
+
+        List<Prete> userPretes = preteRepository.findUserLoanHistory(userId);
         return convertPretesToDTOList(userPretes);
     }
 
     @Override
-    public List<ResponsePreteDTO> getUserDemandes(String idLecteur) {
-        // Get user's loan requests
-        List<Prete> userDemandes = preteRepository.findUserDemandes(idLecteur);
+    public List<ResponsePreteDTO> getUserDemandes(String userId, String authenticatedUserId) {
+        if (!userId.equals(authenticatedUserId)) {
+            throw new InvalidOperationException("Vous ne pouvez voir que vos propres demandes.");
+        }
+
+        List<Prete> userDemandes = preteRepository.findUserDemandes(userId);
         return convertPretesToDTOList(userDemandes);
     }
 
     @Override
     @Transactional
-    public void cancelUserDemande(String idLecteur, Integer idPret) {
-        // Find the demande
+    public void cancelUserDemande(String userId, Integer idPret, String authenticatedUserId) {
+        if (!userId.equals(authenticatedUserId)) {
+            throw new InvalidOperationException("Vous ne pouvez annuler que vos propres demandes.");
+        }
+
         Prete prete = preteRepository.findById(idPret)
                 .orElseThrow(() -> new ResourceNotFoundException("Demande de prêt non trouvée avec ID: " + idPret));
 
-        // Verify it's actually a demande
         if (prete.getDemande() == null || !prete.getDemande()) {
             throw new InvalidOperationException("Ceci n'est pas une demande de prêt.");
         }
 
-        // Verify the demande belongs to the user
-        if (!prete.getIdLecteur().equals(idLecteur)) {
-            throw new InvalidOperationException("Vous ne pouvez annuler que vos propres demandes.");
+        if (!prete.getUserId().equals(userId)) {
+            throw new InvalidOperationException("Demande ne correspond pas à l'utilisateur.");
         }
 
-        // Delete the demande
         preteRepository.delete(prete);
     }
 
@@ -376,7 +365,7 @@ public class PreteServiceImpl implements PreteService {
         List<ResponsePreteDTO> result = new ArrayList<>();
 
         for (Prete p : pretes) {
-            Lecteur lecteur = lecteurClient.getLecteurById(p.getIdLecteur());
+            Lecteur lecteur = lecteurClient.getLecteurById(p.getUserId());
             Livre livre = livreClient.getLivreById(p.getIdLivre());
 
             p.setLecteur(lecteur);

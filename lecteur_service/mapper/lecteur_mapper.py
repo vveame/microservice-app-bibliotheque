@@ -14,7 +14,7 @@ class LecteurMapper:
 
     def entity_to_dto(self, entity: dict) -> ResponseLecteurDTO:
         return ResponseLecteurDTO(
-            id_lecteur=str(entity.get("_id")),
+            userId=str(entity.get("_id")),
             nom=entity.get("nom"),
             prenom=entity.get("prenom"),
             date_naissance=entity.get("date_naissance"),

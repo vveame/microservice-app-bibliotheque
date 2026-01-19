@@ -15,7 +15,7 @@ spec:
       containers:
         - name: prete-service
           image: prete-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8081
           env:

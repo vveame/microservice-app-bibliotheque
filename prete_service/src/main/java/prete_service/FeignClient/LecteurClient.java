@@ -22,7 +22,7 @@ public interface LecteurClient {
     default Lecteur fallbackGetLecteur(String id, Throwable t) {
         // Create a default/empty lecteur
         Lecteur fallbackLecteur = new Lecteur();
-        fallbackLecteur.setIdLecteur(id);
+        fallbackLecteur.setUserId(id);
         fallbackLecteur.setNom("Service Temporairement Indisponible");
         fallbackLecteur.setEmail("default@example.com");
         // Log the error

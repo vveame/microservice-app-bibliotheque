@@ -1,8 +1,8 @@
 from flask_restx import Namespace, Resource, fields
-from flask import request
+from flask import request, g
 from service.lecteur_service import LecteurService
 from dto.request_lecteur_dto import RequestLecteurDTO
-from security.jwt_middleware import jwt_required, roles_required, admin_biblio_or_self, admin_or_self
+from security.jwt_middleware import jwt_required, roles_required
 
 api = Namespace('lecteurs', description='Gestion des lecteurs')
 
@@ -20,7 +20,7 @@ lecteur_model = api.model('LecteurRequest', {
 
 # Define output model (response) - you can customize fields shown
 lecteur_response_model = api.model('LecteurResponse', {
-    'id_lecteur': fields.String(description='ID lecteur'),
+    'userId': fields.String(description='ID lecteur'),
     'nom': fields.String(description='Nom de l\'lecteur'),
     'prenom': fields.String(description='Prénom de l\'lecteur'),
     'date_naissance': fields.String(description='Date de naissance'),
@@ -64,7 +64,7 @@ class LecteurList(Resource):
 class Lecteur(Resource):
     @api.doc(security='Bearer')
     @jwt_required
-    @admin_biblio_or_self(service)
+    @roles_required('ROLE_BIBLIOTHECAIRE', 'ROLE_ADMIN')
     @api.marshal_with(lecteur_response_model)
     def get(self, id):
         """Récupérer un lecteur par ID"""
@@ -72,7 +72,7 @@ class Lecteur(Resource):
 
     @api.doc(security='Bearer')
     @jwt_required
-    @admin_or_self(service)
+    @roles_required('ROLE_ADMIN')
     @api.expect(lecteur_model)
     @api.marshal_with(lecteur_response_model)
     def put(self, id):
@@ -109,3 +109,30 @@ class LecteurRegister(Resource):
             password=data.get('password')
         )
         return service.add_lecteur(dto)
+
+@api.route('/me')
+class LecteurMe(Resource):
+    @api.doc(security='Bearer')
+    @jwt_required
+    @roles_required('ROLE_LECTEUR')
+    @api.marshal_with(lecteur_response_model)
+    def get(self):
+        """Récupérer mon propre profil"""
+        return service.get_lecteur_by_id(g.userId)
+
+    @api.doc(security='Bearer')
+    @jwt_required
+    @roles_required('ROLE_LECTEUR')
+    @api.expect(lecteur_model)
+    @api.marshal_with(lecteur_response_model)
+    def put(self):
+        """Modifier mon propre profil"""
+        data = request.json
+        dto = RequestLecteurDTO(
+            nom=data.get('nom'),
+            prenom=data.get('prenom'),
+            date_naissance=data.get('date_naissance'),
+            email=data.get('email'),
+            password=data.get('password')
+        )
+        return service.update_lecteur(g.userId, dto)

@@ -1,7 +1,7 @@
 class ResponseLecteurDTO:
     def __init__(
             self,
-            id_lecteur=None,
+            userId=None,
             nom=None,
             prenom=None,
             date_naissance=None,
@@ -10,7 +10,7 @@ class ResponseLecteurDTO:
             created_at=None,
             updated_at=None
     ):
-        self.id_lecteur = id_lecteur
+        self.userId = userId
         self.nom = nom
         self.prenom = prenom
         self.date_naissance = date_naissance

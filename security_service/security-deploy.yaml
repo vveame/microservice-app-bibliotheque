@@ -15,7 +15,7 @@ spec:
       containers:
         - name: security-service
           image: security-service:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 9090
           env:
