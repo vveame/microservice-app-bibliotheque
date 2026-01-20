@@ -1,7 +1,7 @@
 class ResponseAdminDTO:
     def __init__(
             self,
-            id_admin=None,
+            userId=None,
             nom=None,
             prenom=None,
             date_naissance=None,
@@ -10,7 +10,7 @@ class ResponseAdminDTO:
             created_at=None,
             updated_at=None
     ):
-        self.id_admin = id_admin
+        self.userId = userId
         self.nom = nom
         self.prenom = prenom
         self.date_naissance = date_naissance

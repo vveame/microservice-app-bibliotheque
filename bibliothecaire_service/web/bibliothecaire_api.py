@@ -1,8 +1,8 @@
 from flask_restx import Namespace, Resource, fields
-from flask import request
+from flask import request, g
 from service.bibliothecaire_service import BibliothecaireService
 from dto.request_bibliothecaire_dto import RequestBibliothecaireDTO
-from security.jwt_middleware import jwt_required, roles_required, admin_or_self
+from security.jwt_middleware import jwt_required, roles_required
 
 api = Namespace('bibliothecaires', description='Gestion des bibliothecaires')
 
@@ -20,7 +20,7 @@ bibliothecaire_model = api.model('BibliothecaireRequest', {
 
 # Define output model (response) - you can customize fields shown
 bibliothecaire_response_model = api.model('BibliothecaireResponse', {
-    'id_bibliothecaire': fields.String(description='ID bibliothecaire'),
+    'userId': fields.String(description='ID bibliothecaire'),
     'nom': fields.String(description='Nom de l\'bibliothecaire'),
     'prenom': fields.String(description='Prénom de l\'bibliothecaire'),
     'date_naissance': fields.String(description='Date de naissance'),
@@ -64,7 +64,7 @@ class BibliothecaireList(Resource):
 class Bibliothecaire(Resource):
     @api.doc(security='Bearer')
     @jwt_required
-    @admin_or_self(service)
+    @roles_required('ROLE_ADMIN')
     @api.marshal_with(bibliothecaire_response_model)
     def get(self, id):
         """Récupérer un bibliothecaire par ID"""
@@ -72,7 +72,7 @@ class Bibliothecaire(Resource):
 
     @api.doc(security='Bearer')
     @jwt_required
-    @admin_or_self(service)
+    @roles_required('ROLE_ADMIN')
     @api.expect(bibliothecaire_model)
     @api.marshal_with(bibliothecaire_response_model)
     def put(self, id):
@@ -93,3 +93,30 @@ class Bibliothecaire(Resource):
     def delete(self, id):
         """Supprimer un bibliothecaire"""
         return service.delete_bibliothecaire(id)
+
+@api.route('/me')
+class BibliothecaireMe(Resource):
+    @api.doc(security='Bearer')
+    @jwt_required
+    @roles_required('ROLE_BIBLIOTHECAIRE')
+    @api.marshal_with(bibliothecaire_response_model)
+    def get(self):
+        """Récupérer mon propre profil"""
+        return service.get_bibliothecaire_by_id(g.userId)
+
+    @api.doc(security='Bearer')
+    @jwt_required
+    @roles_required('ROLE_BIBLIOTHECAIRE')
+    @api.expect(bibliothecaire_model)
+    @api.marshal_with(bibliothecaire_response_model)
+    def put(self):
+        """Modifier mon propre profil"""
+        data = request.json
+        dto = RequestBibliothecaireDTO(
+            nom=data.get('nom'),
+            prenom=data.get('prenom'),
+            date_naissance=data.get('date_naissance'),
+            email=data.get('email'),
+            password=data.get('password')
+        )
+        return service.update_bibliothecaire(g.userId, dto)

@@ -12,57 +12,46 @@ const PUBLIC_KEY = fs.readFileSync(
  * JWT authentication middleware
  */
 function jwtRequired(req, res, next) {
-    const auth = req.headers["authorization"];
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) return res.status(401).json({ error: 'Missing Authorization header' });
 
-    if (!auth) {
-        return res.status(401).json({ error: "Missing Authorization header" });
-    }
-
-    const parts = auth.split(" ");
-    if (parts.length !== 2 || parts[0] !== "Bearer") {
-        return res.status(401).json({ error: "Invalid Authorization header format" });
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+        return res.status(401).json({ error: 'Invalid Authorization header format' });
     }
 
     const token = parts[1];
 
-    try {
-        const payload = jwt.verify(token, PUBLIC_KEY, {
-            algorithms: ["RS256"],
-            ignoreExpiration: false
-        });
-
-        // Attach user info (same idea as Flask g)
-        req.user = {
-            email: payload.sub,
-            roles: payload.scope ? payload.scope.split(" ") : []
-        };
-
-        next();
-    } catch (err) {
-        return res.status(401).json({
-            error: "Invalid or expired token",
-            message: err.message
-        });
-    }
-}
-
-/**
- * Role-based access control
- */
-function rolesRequired(...requiredRoles) {
-    return (req, res, next) => {
-        if (!req.user || !req.user.roles) {
-            return res.status(401).json({ error: "Unauthenticated" });
+    jwt.verify(token, PUBLIC_KEY, { algorithms: ['RS256'] }, (err, payload) => {
+        if (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({ error: 'Token expired' });
+            }
+            return res.status(401).json({ error: 'Invalid token', message: err.message });
         }
 
-        const hasRole = requiredRoles.some(role =>
-            req.user.roles.includes(role)
-        );
+        // Set user info on request object for later middleware/routes
+        req.userId = payload.userId;
+        req.userRoles = payload.scope ? payload.scope.split(' ') : [];
 
+        if (!req.userId) {
+            return res.status(401).json({ error: 'Invalid token: missing userId' });
+        }
+
+        next();
+    });
+}
+
+// Middleware to check if user has required role(s)
+function rolesRequired(...requiredRoles) {
+    return (req, res, next) => {
+        if (!req.userRoles) {
+            return res.status(401).json({ error: 'Missing authentication' });
+        }
+
+        const hasRole = requiredRoles.some(role => req.userRoles.includes(role));
         if (!hasRole) {
-            return res.status(403).json({
-                error: "Forbidden: insufficient role"
-            });
+            return res.status(403).json({ error: 'Access forbidden: insufficient role' });
         }
 
         next();

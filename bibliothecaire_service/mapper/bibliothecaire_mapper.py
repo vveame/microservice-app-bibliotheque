@@ -14,7 +14,7 @@ class BibliothecaireMapper:
 
     def entity_to_dto(self, entity: dict) -> ResponseBibliothecaireDTO:
         return ResponseBibliothecaireDTO(
-            id_bibliothecaire=str(entity.get("_id")),
+            userId=str(entity.get("_id")),
             nom=entity.get("nom"),
             prenom=entity.get("prenom"),
             date_naissance=entity.get("date_naissance"),

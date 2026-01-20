@@ -2,6 +2,7 @@ from flask import request, g
 from functools import wraps
 import jwt
 from config import Config
+from flask_restx import abort
 
 with open(Config.RSA_PUBLIC_KEY_PATH, "rb") as f:
     PUBLIC_KEY = f.read()
@@ -9,7 +10,7 @@ with open(Config.RSA_PUBLIC_KEY_PATH, "rb") as f:
 def jwt_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        auth = request.headers.get("Authorization", None)
+        auth = request.headers.get("Authorization")
         if not auth:
             return {"error": "Missing Authorization header"}, 401
 
@@ -18,17 +19,26 @@ def jwt_required(f):
             return {"error": "Invalid Authorization header format"}, 401
 
         token = parts[1]
+
         try:
-            payload = jwt.decode(token, PUBLIC_KEY, algorithms=["RS256"], options={"verify_aud": False}, leeway=30)
+            payload = jwt.decode(
+                token,
+                PUBLIC_KEY,
+                algorithms=["RS256"],
+                options={"verify_aud": False},
+                leeway=30
+            )
         except jwt.ExpiredSignatureError:
             return {"error": "Token expired"}, 401
         except jwt.InvalidTokenError as e:
             return {"error": "Invalid token", "message": str(e)}, 401
 
-        # Save user info and roles in Flask global context for use in the endpoint or other decorators
-        g.user_email = payload.get("sub")
-        # 'scope' claim is your roles string, space-separated
+        # NEW SOURCE OF TRUTH
+        g.userId = payload.get("userId")
         g.user_roles = payload.get("scope", "").split()
+
+        if not g.userId:
+            return {"error": "Invalid token: missing userId"}, 401
 
         return f(*args, **kwargs)
     return wrapper

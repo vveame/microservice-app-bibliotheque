@@ -1,5 +1,5 @@
 from flask_restx import Namespace, Resource, fields
-from flask import request
+from flask import request, g
 from service.admin_service import AdminService
 from dto.request_admin_dto import RequestAdminDTO
 from security.jwt_middleware import jwt_required, roles_required
@@ -19,7 +19,7 @@ admin_model = api.model('AdminRequest', {
 
 # Define output model (response) - you can customize fields shown
 admin_response_model = api.model('AdminResponse', {
-    'id_admin': fields.String(description='ID admin'),
+    'userId': fields.String(description='ID admin'),
     'nom': fields.String(description='Nom de l\'admin'),
     'prenom': fields.String(description='Prénom de l\'admin'),
     'date_naissance': fields.String(description='Date de naissance'),
@@ -91,3 +91,30 @@ class Admin(Resource):
     def delete(self, id):
         """Supprimer un admin"""
         return service.delete_admin(id)
+
+@api.route('/me')
+class AdminMe(Resource):
+    @api.doc(security='Bearer')
+    @jwt_required
+    @roles_required('ROLE_ADMIN')
+    @api.marshal_with(admin_response_model)
+    def get(self):
+        """Récupérer mon propre profil"""
+        return service.get_admin_by_id(g.userId)
+
+    @api.doc(security='Bearer')
+    @jwt_required
+    @roles_required('ROLE_ADMIN')
+    @api.expect(admin_model)
+    @api.marshal_with(admin_response_model)
+    def put(self):
+        """Modifier mon propre profil"""
+        data = request.json
+        dto = RequestAdminDTO(
+            nom=data.get('nom'),
+            prenom=data.get('prenom'),
+            date_naissance=data.get('date_naissance'),
+            email=data.get('email'),
+            password=data.get('password')
+        )
+        return service.update_admin(g.userId, dto)

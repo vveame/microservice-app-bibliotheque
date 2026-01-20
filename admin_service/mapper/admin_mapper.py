@@ -14,7 +14,7 @@ class AdminMapper:
 
     def entity_to_dto(self, entity: dict) -> ResponseAdminDTO:
         return ResponseAdminDTO(
-            id_admin=str(entity.get("_id")),
+            userId=str(entity.get("_id")),
             nom=entity.get("nom"),
             prenom=entity.get("prenom"),
             date_naissance=entity.get("date_naissance"),

@@ -1,7 +1,7 @@
 class ResponseBibliothecaireDTO:
     def __init__(
             self,
-            id_bibliothecaire=None,
+            userId=None,
             nom=None,
             prenom=None,
             date_naissance=None,
@@ -10,7 +10,7 @@ class ResponseBibliothecaireDTO:
             created_at=None,
             updated_at=None
     ):
-        self.id_bibliothecaire = id_bibliothecaire
+        self.userId = userId
         self.nom = nom
         self.prenom = prenom
         self.date_naissance = date_naissance
