@@ -1,6 +1,7 @@
 package prete_service.service;
 
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 import prete_service.DTO.Lecteur;
 import prete_service.DTO.Livre;
 import prete_service.DTO.RequestPreteDTO;
@@ -26,19 +27,22 @@ public class PreteServiceImpl implements PreteService {
     private final PreteMapper preteMapper;
     private final LecteurClient lecteurClient;
     private final LivreClient livreClient;
+    private final String internalApiKey;
 
-    public PreteServiceImpl(PreteRepository preteRepository, PreteMapper preteMapper, LecteurClient lecteurClient, LivreClient livreClient) {
+    public PreteServiceImpl(PreteRepository preteRepository, PreteMapper preteMapper, LecteurClient lecteurClient, LivreClient livreClient,
+                            @Value("${internal.api.key}") String internalApiKey) {
         this.preteRepository = preteRepository;
         this.preteMapper = preteMapper;
         this.lecteurClient = lecteurClient;
         this.livreClient = livreClient;
+        this.internalApiKey = internalApiKey;
     }
 
     @Override
     public ResponsePreteDTO addPrete(RequestPreteDTO requestPreteDTO) {
 
         try {
-            Lecteur lecteur = lecteurClient.getLecteurById(requestPreteDTO.getUserId());
+            Lecteur lecteur = lecteurClient.getLecteurById(requestPreteDTO.getUserId(), internalApiKey);
             if (lecteur == null) {
                 throw new ResourceNotFoundException("Lecteur Introuvable !");
             }
@@ -79,7 +83,7 @@ public class PreteServiceImpl implements PreteService {
         }
 
         Prete savedPrete = preteRepository.save(prete);
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId()));
+        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId(), internalApiKey));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
         return preteMapper.Prete_To_DTO(savedPrete);
     }
@@ -89,9 +93,11 @@ public class PreteServiceImpl implements PreteService {
         List<Prete> pretes = preteRepository.findAll();
         List<ResponsePreteDTO> result = new ArrayList<>();
 
+        System.out.println("Using internal API key: " + internalApiKey);
+
         for (Prete p : pretes) {
 
-            Lecteur lecteur = lecteurClient.getLecteurById(p.getUserId());
+            Lecteur lecteur = lecteurClient.getLecteurById(p.getUserId(), internalApiKey);
             p.setLecteur(lecteur);
             Livre livre = livreClient.getLivreById(p.getIdLivre());
             p.setLivre(livre);
@@ -107,7 +113,7 @@ public class PreteServiceImpl implements PreteService {
         Prete prete = preteRepository.findById(id).orElse(null);
         if (prete == null) return null;
 
-        Lecteur lecteur = lecteurClient.getLecteurById(prete.getUserId());
+        Lecteur lecteur = lecteurClient.getLecteurById(prete.getUserId(), internalApiKey);
         Livre livre = livreClient.getLivreById(prete.getIdLivre());
 
         prete.setLecteur(lecteur);
@@ -162,7 +168,7 @@ public class PreteServiceImpl implements PreteService {
         Prete savedPrete = preteRepository.save(prete);
 
         // Fetch user and book details for response
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId()));
+        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId(), internalApiKey));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
 
         return preteMapper.Prete_To_DTO(savedPrete);
@@ -194,7 +200,7 @@ public class PreteServiceImpl implements PreteService {
         Prete savedPrete = preteRepository.save(prete);
 
         // Fetch user and book details
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId()));
+        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId(), internalApiKey));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
 
         return preteMapper.Prete_To_DTO(savedPrete);
@@ -224,7 +230,7 @@ public class PreteServiceImpl implements PreteService {
     @Transactional
     public ResponsePreteDTO demandePrete(RequestPreteDTO requestPreteDTO, String authenticatedUserId) {
         // Here we enforce userId from JWT token (authenticatedUserId)
-        Lecteur lecteur = lecteurClient.getLecteurById(authenticatedUserId);
+        Lecteur lecteur = lecteurClient.getLecteurById(authenticatedUserId, internalApiKey);
         if (lecteur == null) throw new ResourceNotFoundException("Lecteur Introuvable !");
 
         Livre livre = livreClient.getLivreById(requestPreteDTO.getIdLivre());
@@ -296,7 +302,7 @@ public class PreteServiceImpl implements PreteService {
         }
 
         Prete savedPrete = preteRepository.save(prete);
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId()));
+        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId(), internalApiKey));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
 
         return preteMapper.Prete_To_DTO(savedPrete);
@@ -311,10 +317,9 @@ public class PreteServiceImpl implements PreteService {
     }
 
     @Override
-    public List<ResponsePreteDTO> getPretesOnly() {
-        List<Prete> activePretes = preteRepository.findAllActiveActualPretes();
-
-        return convertPretesToDTOList(activePretes);
+    public List<ResponsePreteDTO> getPretesPerUser(String userId) {
+        List<Prete> pretes = preteRepository.findUserLoanHistory(userId);
+        return convertPretesToDTOList(pretes);
     }
 
     @Override
@@ -365,7 +370,7 @@ public class PreteServiceImpl implements PreteService {
         List<ResponsePreteDTO> result = new ArrayList<>();
 
         for (Prete p : pretes) {
-            Lecteur lecteur = lecteurClient.getLecteurById(p.getUserId());
+            Lecteur lecteur = lecteurClient.getLecteurById(p.getUserId(), internalApiKey);
             Livre livre = livreClient.getLivreById(p.getIdLivre());
 
             p.setLecteur(lecteur);

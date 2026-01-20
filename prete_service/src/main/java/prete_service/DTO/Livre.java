@@ -5,6 +5,8 @@ import lombok.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class Livre {
     private Integer idLivre;
     private String titre;

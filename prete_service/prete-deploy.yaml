@@ -19,6 +19,11 @@ spec:
           ports:
             - containerPort: 8081
           env:
+            - name: INTERNAL_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-secret
+                  key: INTERNAL_API_KEY
             - name: SPRING_APPLICATION_NAME
               value: PRETE-SERVICE
             - name: SERVER_PORT

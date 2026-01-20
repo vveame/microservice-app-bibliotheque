@@ -7,3 +7,5 @@
 **/.env/
 
 **/node_modules/
+
+**/initlivre.js

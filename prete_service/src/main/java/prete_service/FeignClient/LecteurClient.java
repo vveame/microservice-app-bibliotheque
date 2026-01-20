@@ -3,6 +3,7 @@ package prete_service.FeignClient;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
+import org.springframework.web.bind.annotation.RequestHeader;
 import prete_service.DTO.Lecteur;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -11,15 +12,18 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(name = "LECTEUR-SERVICE", url = "${lecteur.service.url}")
 public interface LecteurClient {
-    @GetMapping("/v1/lecteurs/{id}")  // Changed endpoint
+    @GetMapping("/internal/lecteurs/{id}")
     @CircuitBreaker(name = "lecteurCB", fallbackMethod = "fallbackGetLecteur")
     @Retry(name = "lecteurRetry",fallbackMethod = "fallbackGetLecteur")
     @Bulkhead(name = "lecteurBull",fallbackMethod = "fallbackGetLecteur")
     @Cacheable(value = "lecteur-cache", key = "#id", unless = "#result == null")
-    Lecteur getLecteurById(@PathVariable("id") String id);
+    Lecteur getLecteurById(
+            @PathVariable("id") String id,
+            @RequestHeader("X-API-KEY") String apiKey
+    );
 
     // Fallback method
-    default Lecteur fallbackGetLecteur(String id, Throwable t) {
+    default Lecteur fallbackGetLecteur(String id, String apiKey, Throwable t) {
         // Create a default/empty lecteur
         Lecteur fallbackLecteur = new Lecteur();
         fallbackLecteur.setUserId(id);

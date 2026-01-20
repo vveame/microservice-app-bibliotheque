@@ -27,7 +27,7 @@ import java.util.List;
                 version= "1.0.0"
         ),
         servers = @Server(
-                url = "http://localhost:8092/"
+                url = "http://localhost:8081/"
         )
 )
 @RestController
@@ -256,16 +256,17 @@ public class ApiRestfull {
         return ResponseEntity.ok(responsePreteDTOS);
     }
 
-    //for the ML in the future if needed
     @Operation(
-            summary = "Lister uniquement les prêts réels",
-            description = "Retourne uniquement les prêts réels (demande = false). " +
+            summary = "Lister les prêts d’un lecteur",
+            description = "Retourne uniquement les prêts réels (demande = false) d’un lecteur. " +
                     "Utile pour les systèmes de recommandation ML."
     )
-    @GetMapping("/pretesonly")
-    public ResponseEntity<List<ResponsePreteDTO>> getPretesOnly() {
-        List<ResponsePreteDTO> responsePreteDTOS = preteService.getPretesOnly();
-        return ResponseEntity.ok(responsePreteDTOS);
+    @GetMapping("/lecteur/pretes/{userId}")
+    public ResponseEntity<List<ResponsePreteDTO>> getPretesPerUser(
+            @PathVariable String userId
+    ) {
+        List<ResponsePreteDTO> pretes = preteService.getPretesPerUser(userId);
+        return ResponseEntity.ok(pretes);
     }
 
     @Operation(
