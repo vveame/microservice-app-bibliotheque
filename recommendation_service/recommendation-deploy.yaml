@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendation-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recommendation-service
+  template:
+    metadata:
+      labels:
+        app: recommendation-service
+    spec:
+      containers:
+        - name: recommendation-service
+          image: recommendation-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8085
+          env:
+            - name: APP_NAME
+              value: RECOMMENDATION-SERVICE
+            - name: APP_PORT
+              value: "8085"
+            - name: EUREKA_SERVER
+              value: http://discovery-service:8761/eureka
+            - name: LIVRE_SERVICE_URL
+              value: http://livre-service:8080
+            - name: PRETE_SERVICE_URL
+              value: http://prete-service:8081
+            - name: RSA_PUBLIC_KEY_PATH
+              value: keys/publicKey.pem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendation-service
+spec:
+  type: ClusterIP
+  selector:
+    app: recommendation-service
+  ports:
+    - port: 8085
+      targetPort: 8085

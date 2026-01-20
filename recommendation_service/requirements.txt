@@ -1,0 +1,9 @@
+Flask
+pandas
+scikit-learn
+numpy
+PyJWT
+cryptography
+requests
+flask-restx
+bcrypt
