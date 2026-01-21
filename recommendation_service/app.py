@@ -11,20 +11,31 @@ def create_app():
 
     @app.route("/recommend", methods=["GET"])
     @jwt_required
-    @roles_required('ROLE_LECTEUR')
+    @roles_required("ROLE_LECTEUR")
     def recommend_books():
-        # Use userId from token, no path parameter
+        """
+        Retourne les recommandations pour l'utilisateur connecté.
+        Nettoie les titres empruntés avant de passer au recommendeur.
+        """
         user_id = g.userId
+        jwt_token = g.jwt_token  # token pour appel interne au service Prêt
 
+        # Récupérer le catalogue complet de livres
         books_df = fetch_books()
         recommender = BookRecommender(books_df)
 
-        borrowed_books = get_borrowed_books(user_id)
-        recommendations = recommender.recommend(borrowed_books)
+        # Récupérer les livres empruntés
+        borrowed_books = get_borrowed_books(user_id, jwt_token)
+
+        # nettoyer les titres
+        cleaned_borrowed_books = [t.replace("Demande du livre ", "").strip() for t in borrowed_books]
+
+        # Générer les recommandations
+        recommendations = recommender.recommend(cleaned_borrowed_books)
 
         return jsonify({
             "reader_id": user_id,
-            "borrowed_books": borrowed_books,
+            "borrowed_books": cleaned_borrowed_books,
             "recommendations": recommendations
         })
 

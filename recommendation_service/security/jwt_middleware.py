@@ -1,8 +1,8 @@
+# security/jwt_middleware.py
 from flask import request, g
 from functools import wraps
 import jwt
 from config import Config
-from flask_restx import abort
 
 with open(Config.RSA_PUBLIC_KEY_PATH, "rb") as f:
     PUBLIC_KEY = f.read()
@@ -33,9 +33,9 @@ def jwt_required(f):
         except jwt.InvalidTokenError as e:
             return {"error": "Invalid token", "message": str(e)}, 401
 
-        # NEW SOURCE OF TRUTH
         g.userId = payload.get("userId")
         g.user_roles = payload.get("scope", "").split()
+        g.jwt_token = token  # <-- conservé pour les appels internes
 
         if not g.userId:
             return {"error": "Invalid token: missing userId"}, 401
@@ -47,11 +47,9 @@ def roles_required(*required_roles):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            # Make sure jwt_required ran before (g.user_roles should exist)
             if not hasattr(g, "user_roles"):
                 return {"error": "Missing authentication"}, 401
 
-            # Check if user has at least one required role
             if not any(role in g.user_roles for role in required_roles):
                 return {"error": "Access forbidden: insufficient role"}, 403
 
