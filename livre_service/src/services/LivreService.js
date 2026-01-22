@@ -94,7 +94,38 @@ class LivreService {
   };
 }
 
-}
+// Décrémenter le stock d’un livre
+    async decrementStock(id) {
+        const livre = await Livre.findByPk(id);
 
+        if (!livre) {
+            throw new Error("Livre introuvable");
+        }
+
+        if (livre.numTotalLivres <= 0) {
+            throw new Error("Aucun exemplaire disponible pour ce livre");
+        }
+
+        livre.numTotalLivres -= 1;
+        await livre.save();
+
+        return mapper.toDTO(livre);
+    }
+
+    // Incrémenter le stock d’un livre
+    async incrementStock(id) {
+        const livre = await Livre.findByPk(id);
+
+        if (!livre) {
+            throw new Error("Livre introuvable");
+        }
+
+        livre.numTotalLivres += 1;
+        await livre.save();
+
+        return mapper.toDTO(livre);
+    }
+
+}
 
 module.exports = new LivreService();

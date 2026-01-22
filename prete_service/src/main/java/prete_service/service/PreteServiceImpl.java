@@ -167,6 +167,9 @@ public class PreteServiceImpl implements PreteService {
         prete.setLivreRetourne(true);
         Prete savedPrete = preteRepository.save(prete);
 
+        // Increment stock on Livre service
+        livreClient.incrementLivreStock(savedPrete.getIdLivre());
+
         // Fetch user and book details for response
         savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId(), internalApiKey));
         savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
@@ -272,38 +275,61 @@ public class PreteServiceImpl implements PreteService {
     @Override
     @Transactional
     public ResponsePreteDTO accepterPrete(Integer idPret) {
-        Prete prete = preteRepository.findById(idPret)
-                .orElseThrow(() -> new ResourceNotFoundException("Demande de prêt non trouvée avec ID: " + idPret));
 
-        // Check if it's actually a request
+        Prete prete = preteRepository.findById(idPret)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Demande de prêt non trouvée avec ID: " + idPret
+                ));
+
+        // Must be a request
         if (prete.getDemande() == null || !prete.getDemande()) {
             throw new InvalidOperationException("Ceci n'est pas une demande de prêt.");
         }
 
-        // Check if user already has an active loan
-        List<Prete> activePretes = preteRepository.findByUserIdAndLivreRetourneFalse(prete.getUserId());
+        // User must not have an active loan
+        List<Prete> activePretes =
+                preteRepository.findByUserIdAndLivreRetourneFalse(prete.getUserId());
+
         boolean hasActiveLoan = activePretes.stream()
                 .anyMatch(p -> p.getDemande() == null || !p.getDemande());
 
         if (hasActiveLoan) {
             throw new ActiveLoanException(
                     "Le lecteur avec ID " + prete.getUserId() +
-                            " a déjà un prêt actif. Impossible d'accepter cette demande."
+                            " a déjà un prêt actif."
             );
         }
 
-        // Convert request to actual loan
-        prete.setDemande(false);
-        prete.setLivreRetourne(false); // Now it's an active loan
+        // CHECK BOOK AVAILABILITY
+        Livre livre = livreClient.getLivreById(prete.getIdLivre());
 
-        // Set actual loan dates if not already set
+        if (livre.getNumTotalLivres() == null || livre.getNumTotalLivres() <= 0) {
+            throw new InvalidOperationException(
+                    "Le livre '" + livre.getTitre() + "' n'est plus disponible"
+            );
+        }
+
+        // DECREMENT STOCK (REMOTE CALL)
+        livreClient.decrementLivreStock(prete.getIdLivre());
+
+        // Convert request → active loan
+        prete.setDemande(false);
+        prete.setLivreRetourne(false);
+
         if (prete.getDatePret() == null) {
             prete.setDatePret(new Date());
         }
 
         Prete savedPrete = preteRepository.save(prete);
-        savedPrete.setLecteur(lecteurClient.getLecteurById(savedPrete.getUserId(), internalApiKey));
-        savedPrete.setLivre(livreClient.getLivreById(savedPrete.getIdLivre()));
+
+        // Enrich DTO
+        savedPrete.setLecteur(
+                lecteurClient.getLecteurById(savedPrete.getUserId(), internalApiKey)
+        );
+
+        savedPrete.setLivre(
+                livreClient.getLivreById(savedPrete.getIdLivre())
+        );
 
         return preteMapper.Prete_To_DTO(savedPrete);
     }

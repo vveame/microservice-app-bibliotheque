@@ -82,3 +82,23 @@ exports.checkDisponibilite = async (req, res, next) => {
     next(error);
   }
 };
+
+// ➖ DECREMENT STOCK
+exports.decrementStock = async (req, res, next) => {
+    try {
+        const result = await livreService.decrementStock(req.params.id);
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+
+// ➕ INCREMENT STOCK
+exports.incrementStock = async (req, res, next) => {
+    try {
+        const result = await livreService.incrementStock(req.params.id);
+        res.json(result);
+    } catch (error) {
+        next(error);
+    }
+};

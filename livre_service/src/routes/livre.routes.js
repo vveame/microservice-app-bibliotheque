@@ -168,4 +168,48 @@ router.get("/:id/disponibilite", controller.checkDisponibilite);
  */
 router.get("/:id", controller.getById);
 
+/**
+ * @swagger
+ * /v1/livres/{id}/decrement:
+ *   put:
+ *     summary: Décrémenter le stock d’un livre
+ *     tags: [Livres]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Stock décrémenté
+ *       400:
+ *         description: Stock insuffisant
+ *       404:
+ *         description: Livre introuvable
+ */
+router.put(
+    "/:id/decrement",
+    controller.decrementStock
+);
+
+/**
+ * @swagger
+ * /v1/livres/{id}/increment:
+ *   put:
+ *     summary: Incrémenter le stock d’un livre
+ *     tags: [Livres]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Stock incrémenté
+ *       404:
+ *         description: Livre introuvable
+ */
+router.put(
+    "/:id/increment",
+    controller.incrementStock
+);
+
 module.exports = router;
